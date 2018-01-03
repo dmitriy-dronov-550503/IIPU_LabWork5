@@ -77,7 +77,9 @@ public class Controller {
                      table.getSelectionModel().getSelectedCells()) {
                     String slot = table.getItems().get(pos.getRow()).getSlot();
                     String path = table.getItems().get(pos.getRow()).getPath();
-                    String cmd = "echo 0000:"+slot+" | sudo -S tee -a "+path+"/unbind";
+                    //String cmd = "sudo echo 0000:"+slot+" | sudo tee -a "+path+"/unbind";
+                    String cmd = "gksudo bash -c 'echo \"0000:"+slot+"\" > "+path+"/unbind'";
+                    System.out.println("Result: "+cmd);
 
                     /*try {
                         BufferedWriter writer = new BufferedWriter(new FileWriter(path+"/unbind", true));
@@ -88,12 +90,14 @@ public class Controller {
                         ex.printStackTrace();
                     }*/
 
+
                     Process pb = null;
                     try {
                         pb = Runtime.getRuntime().exec(cmd);
 
-                        OutputStream out = pb.getOutputStream();
-                        out.write("316728pas".getBytes());
+                        //OutputStream out = pb.getOutputStream();
+                        //out.write(("316728pas"+13).getBytes());
+
 
                         String line;
                         BufferedReader input = new BufferedReader(new InputStreamReader(pb.getInputStream()));
