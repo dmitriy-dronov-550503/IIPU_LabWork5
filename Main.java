@@ -15,7 +15,7 @@ public class Main extends Application {
         controller.init();
         Parent root = controller.getRoot();
 
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Device Manager");
         primaryStage.setScene(new Scene(root, 900, 400));
         primaryStage.show();
     }

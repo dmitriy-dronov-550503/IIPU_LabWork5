@@ -1,5 +1,6 @@
 package sample;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -7,19 +8,25 @@ import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 
 import java.io.*;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 public class Controller {
 
-    GridPane root = new GridPane();
+    AnchorPane root = new AnchorPane();
     private TableView<Device> table = new TableView<Device>();
     private Button unbindButton = new Button("Unbind");
+    private Button bindButton = new Button("Bind");
     final ObservableList<Device> data = FXCollections.observableArrayList();
+
+
 
     void init(){
 
@@ -30,209 +37,103 @@ public class Controller {
         }
 
         TableColumn slotCol = new TableColumn("Slot");
-        slotCol.setMinWidth(100);
+        slotCol.setMinWidth(50);
+        slotCol.prefWidthProperty().bind(table.widthProperty().divide(11));
         slotCol.setCellValueFactory(
                 new PropertyValueFactory<Device, String>("slot"));
 
         TableColumn nameCol = new TableColumn("Name");
-        nameCol.setMinWidth(300);
+        nameCol.prefWidthProperty().bind(table.widthProperty().divide(3.6));
         nameCol.setCellValueFactory(
                 new PropertyValueFactory<Device, String>("name"));
 
         TableColumn classCol = new TableColumn("Class");
-        classCol.setMinWidth(200);
+        classCol.prefWidthProperty().bind(table.widthProperty().divide(4.75));
         classCol.setCellValueFactory(
                 new PropertyValueFactory<Device, String>("className"));
 
         TableColumn vendorCol = new TableColumn("Vendor");
-        vendorCol.setMinWidth(200);
+        vendorCol.prefWidthProperty().bind(table.widthProperty().divide(4.75));
         vendorCol.setCellValueFactory(
                 new PropertyValueFactory<Device, String>("vendor"));
 
         TableColumn pathCol = new TableColumn("Path");
-        pathCol.setMinWidth(100);
+        pathCol.prefWidthProperty().bind(table.widthProperty().divide(4.75));
         pathCol.setCellValueFactory(
                 new PropertyValueFactory<Device, String>("path"));
 
+
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         table.setItems(data);
-        table.getColumns().addAll(slotCol, nameCol, classCol, vendorCol);
+        table.getColumns().addAll(slotCol, nameCol, classCol, vendorCol, pathCol);
 
         initUnbindButton();
-
+        initBindButton();
 
     }
+
     void stop(){
 
     }
 
     Parent getRoot(){
-        root.add(table, 0, 0);
-        root.add(unbindButton, 0,1);
+        HBox bottomPanel = new HBox();
+        AnchorPane.setBottomAnchor(bottomPanel, 0.0);
+        bottomPanel.setSpacing(4.0);
+        bottomPanel.getChildren().addAll(unbindButton, bindButton);
+
+        AnchorPane.setBottomAnchor(table, 26.0);
+        AnchorPane.setLeftAnchor(table,0.0);
+        AnchorPane.setRightAnchor(table, 0.0);
+        AnchorPane.setTopAnchor(table,0.0);
+
+        root.getChildren().addAll(table, bottomPanel);
         return root;
-    }
-
-
-    private static class StreamGobbler implements Runnable {
-        private InputStream inputStream;
-        private Consumer<String> consumer;
-
-        public StreamGobbler(InputStream inputStream, Consumer<String> consumer) {
-            this.inputStream = inputStream;
-            this.consumer = consumer;
-        }
-
-        @Override
-        public void run() {
-            new BufferedReader(new InputStreamReader(inputStream)).lines()
-                    .forEach(consumer);
-        }
-    }
-    private void myAction() throws Exception{
-        ProcessBuilder builder = new ProcessBuilder();
-        String appDirectory = System.getProperty("user.dir")+"/src/sample";
-
-
-        builder.command("gksudo","bash", appDirectory+"/bind.sh");
-        builder.directory(new File(appDirectory));
-        Process process = builder.start();
-        //OutputStream out = process.getOutputStream();
-        //out.write("\n\r316728pas\n\r".getBytes());
-        //out.close();
-        StreamGobbler streamGobbler =
-                new StreamGobbler(process.getInputStream(), System.out::println);
-        Executors.newSingleThreadExecutor().submit(streamGobbler);
-        int exitCode = process.waitFor();
-        assert exitCode == 0;
-    }
-    public static boolean runWithPrivileges() {
-        InputStreamReader input;
-        OutputStreamWriter output;
-
-        try {
-            //Create the process and start it.
-            Process pb = new ProcessBuilder("gksudo").start();
-            output = new OutputStreamWriter(pb.getOutputStream());
-            input = new InputStreamReader(pb.getInputStream());
-
-            int bytes, tryies = 0;
-            char buffer[] = new char[1024];
-            while ((bytes = input.read(buffer, 0, 1024)) != -1) {
-                if(bytes == 0)
-                    continue;
-                //Output the data to console, for debug purposes
-                String data = String.valueOf(buffer, 0, bytes);
-                System.out.println(data);
-                // Check for password request
-                if (data.contains("[sudo] password")) {
-                    System.out.println("Password requested");
-                    // Here you can request the password to user using JOPtionPane or System.console().readPassword();
-                    // I'm just hard coding the password, but in real it's not good.
-                    char password[] = new char[]{'p'};
-                    output.write(password);
-                    output.write('\n');
-                    output.flush();
-                    // erase password data, to avoid security issues.
-                    Arrays.fill(password, '\0');
-                    tryies++;
-                }
-            }
-
-            return tryies < 3;
-        } catch (IOException ex) {
-        }
-
-        return false;
     }
 
     void initUnbindButton(){
         unbindButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-
-
-                String appDirectory = System.getProperty("user.dir")+"/src/sample";
-                try{
-                    try {
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(appDirectory+"/unbind.sh"));
-                        writer.write("hello");
-                        writer.close();
-                    }
-                    catch (Exception ex){
-                        ex.printStackTrace();
-                    }
-                    //myAction();
-                    /*String[] command =
-                            {
-                                    "bash",
-                            };
-                    Process p = Runtime.getRuntime().exec(command);
-                    new Thread(new SyncPipe(p.getErrorStream(), System.err)).start();
-                    new Thread(new SyncPipe(p.getInputStream(), System.out)).start();
-                    PrintWriter stdin = new PrintWriter(p.getOutputStream());
-                    stdin.println("bash unbind");
-                    // write any other commands you want here
-                    stdin.close();
-                    int returnCode = p.waitFor();
-                    System.out.println("Return code = " + returnCode);*/
-                }
-                catch(Exception ex){
-                    ex.printStackTrace();
-                }
-
-
-                /*
                 for (TablePosition pos:
                      table.getSelectionModel().getSelectedCells()) {
                     String slot = table.getItems().get(pos.getRow()).getSlot();
                     String path = table.getItems().get(pos.getRow()).getPath();
-                    //String cmd = "sudo echo 0000:"+slot+" | sudo tee -a "+path+"/unbind";
-                    String cmd = "gksudo bash -c 'echo \"0000:"+slot+"\" > "+path+"/unbind'";
-                    System.out.println("Result: "+cmd);
-*/
-
-
-
-
-                    /*try {
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(path+"/unbind", true));
-                        writer.append("0000:"+slot);
-                        writer.close();
+                    String appDirectory = System.getProperty("user.dir")+"/src/sample";
+                    try {
+                        DeviceManager deviceManager = new DeviceManager(slot, path);
+                        deviceManager.unbind();
                     }
                     catch (Exception ex){
                         ex.printStackTrace();
-                    }*/
-
-/*
-                    Process pb = null;
-                    try {
-                        pb = Runtime.getRuntime().exec(cmd);
-
-                        //OutputStream out = pb.getOutputStream();
-                        //out.write(("316728pas"+13).getBytes());
-
-
-                        String line;
-                        BufferedReader input = new BufferedReader(new InputStreamReader(pb.getInputStream()));
-                        while ((line = input.readLine()) != null) {
-                            System.out.println(line);
-                        }
-                        input.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
-                }*/
+                }
+            }
+        });
+    }
+
+    void initBindButton(){
+        bindButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                for (TablePosition pos:
+                        table.getSelectionModel().getSelectedCells()) {
+                    String slot = table.getItems().get(pos.getRow()).getSlot();
+                    String path = table.getItems().get(pos.getRow()).getPath();
+                    String appDirectory = System.getProperty("user.dir")+"/src/sample";
+                    try {
+                        DeviceManager deviceManager = new DeviceManager(slot, path);
+                        deviceManager.bind();
+                    }
+                    catch (Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
             }
         });
     }
 
     void parseCommand() throws Exception{
-        String patternSlot = "(?<=Slot:)(.*)";
-        String patternClass = "(?<=Class:)(.*)";
-        String patternVendor = "(?<=Vendor:)(.*)";
-        String patternDevice = "(?<=Device:)(.*)";
-
-
         Process p = Runtime.getRuntime().exec("lspci -vmm -k");
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 p.getInputStream()));
