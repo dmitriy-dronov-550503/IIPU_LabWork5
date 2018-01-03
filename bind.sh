@@ -1,1 +1,1 @@
-echo 0000:00:05.0 | tee -a /sys/bus/pci/drivers/snd_intel8x0/bind
+echo 0000:00:07.0 | tee -a /sys/bus/pci/drivers/piix4_smbus/bind

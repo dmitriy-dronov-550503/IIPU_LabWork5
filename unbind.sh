@@ -1,1 +1,1 @@
-echo 0000:00:05.0 | tee -a /sys/bus/pci/drivers/snd_intel8x0/unbind
+echo 0000:00:02.0 | tee -a /sys/bus/pci/drivers/vboxvideo/unbind

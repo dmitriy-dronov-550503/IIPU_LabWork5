@@ -1,7 +1,7 @@
 package sample;
 
 public class Device {
-    private String slot, name, className, vendor, path;
+    private String slot="", name="", className="", vendor="", path="";
 
     public Device(String slot, String name, String className, String vendor, String path) {
         this.slot = slot;

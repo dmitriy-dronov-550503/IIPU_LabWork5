@@ -175,6 +175,12 @@ public class Controller {
                 device.setPath("/sys/bus/pci/drivers/"+line);
                 continue;
             }
+            matchIndex = line.indexOf("Module:");
+            if (matchIndex != -1 && device.getPath().isEmpty()) {
+                line = line.substring(matchIndex + "Module:".length()).trim();
+                device.setPath("/sys/bus/pci/drivers/"+line);
+                continue;
+            }
 
             if(line.equals("")){
                 data.add(device);
