@@ -128,7 +128,7 @@ public class Controller {
                     System.out.println("Password requested");
                     // Here you can request the password to user using JOPtionPane or System.console().readPassword();
                     // I'm just hard coding the password, but in real it's not good.
-                    char password[] = new char[]{'3','1','6','7','2','8','p','a','s'};
+                    char password[] = new char[]{'p'};
                     output.write(password);
                     output.write('\n');
                     output.flush();
@@ -150,7 +150,7 @@ public class Controller {
             @Override
             public void handle(ActionEvent actionEvent) {
 
-                
+
                 String appDirectory = System.getProperty("user.dir")+"/src/sample";
                 try{
                     try {
